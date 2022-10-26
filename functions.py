@@ -4,6 +4,10 @@
 
 #a function to reverse a string
 
+from audioop import reverse
+from ipaddress import ip_address
+
+
 def reverse_string(sentence):
 
     if not isinstance(sentence,str):
@@ -145,7 +149,7 @@ def network_caracteristics(ip,mask):
     return configuration
 
 
-test_plage = {"network":"192.168.0.0","mask":"255.255.0.0"}
+test_plage = {"network":"172.16.0.0","mask":"255.255.0.0"}
 
 #function to adjust the plage
 
@@ -232,7 +236,7 @@ def next_ip(network,ip):
 
     network_config = network_caracteristics(network['network'],network['mask'])
     last_host = network_config['last_host']
-    first_host = network_config['first_host']
+
 
     if is_greater_ip(ip,last_host):
         next_ip=last_host
@@ -265,18 +269,41 @@ def next_ip(network,ip):
     
 
     next_ip = '.'.join(total) #we verify if the generated ip is in the range
-    status = is_within_mask(next_ip,network['mask'],network['network'])
+    status = True
 
     return {'status':status,'next_ip':next_ip}
 
+#thee function to choose the right network mask
+
+def give_the_mask(people):
+
+    result = 0
+    while people > 0:
+        people=people//2
+        result+=1
+    return result
 #here we create the function to give the next valid mask
 
-def next_mask():
-    pass
+def next_mask(result):
 
+    number_of_one = "1"*(32-result)+'0'*result
+    return ip_to_decimal(format(number_of_one))
 #here we create the function to split a network
 
-def split_network():
-    pass
+def split_network(network,slice_list,format=False,names=False):
+    if names:
+        format = True
+    people_list = slice_list
+    people_list.sort(reverse=True)
+    ip_address = network['network']
+    final_list = []
+    for index,single_people in enumerate(people_list):
+        mask_address = next_mask(give_the_mask(single_people))
+        network_config = network_caracteristics(ip_address,mask_address)
+        final_list.append({'for':names[index],'config':network_config})
+        if not format:
+            print(network_config)
+        ip_address = next_ip(network,network_config['broadcast'])['next_ip']
 
-print(next_ip(test_plage,'192.168.255.'))
+
+    return final_list if format else None
