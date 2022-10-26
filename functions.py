@@ -4,9 +4,6 @@
 
 #a function to reverse a string
 
-from audioop import reverse
-
-
 def reverse_string(sentence):
 
     if not isinstance(sentence,str):
@@ -159,40 +156,6 @@ def give_plage(number):
     
     return number_bit
 
-def split_network(network,subnet_list):
-
-    network_address = network.get('network')
-    mask_address = network.get('mask')
-    available_hosts = network_caracteristics(network_address,mask_address)['available_hosts']
-
-    if not is_valid_ip(network_address) or not is_valid_mask(mask_address):
-        raise ValueError("Invalid network address or mask address")
-    
-    subnet_list.sort(reverse=True)
-
-    binary_mask = ip_to_binary(mask_address).replace('.','')
-    range = binary_mask.count('1')
-
-
-    for i in subnet_list:
-        if not isinstance(i,int):
-            raise TypeError('we cannot split a network with non int value')
-
-    total_host_needed = sum(subnet_list)
-
-    if total_host_needed > available_hosts :
-        raise TypeError("the number of host needed cannot satisfy the range")
-
-
-    # for index,subnet in enumerate(subnet_list):
-    #     if index==0:
-    #         print(format(mask_address))
-    #         print(network_caracteristics(network_address,ip_to_decimal(format(mask_address))))
-    #     else:
-    #         binary_plage = "1"*(range+give_plage(subnet))+binary_mask[range+give_plage(subnet):]
-    #         print(format(binary_plage))
-    #         print(network_caracteristics(network_address,ip_to_decimal(format(binary_plage))))
-
 
 
 #writing a function which lists all the hosts of a given domain
@@ -214,11 +177,11 @@ def is_greater_ip(ip_one,ip_two):
     list_one = ip_one.split('.') #converting ip's to list
     list_two = ip_two.split('.') #converting ip's to list
 
-    first_comparison =None if list_one[0] == list_two[0] else list_one[0] > list_two[0]
-    second_comparison = None if list_one[1] == list_two[1] else list_one[1] > list_two[1]
-    third_comparison = None if list_one[2] == list_two[2] else list_one[2] > list_two[2]
-    fourth_comparison = None if list_one[3] == list_two[3] else list_one[3] > list_two[3]
-    
+    first_comparison =None if list_one[0] == list_two[0] else int(list_one[0]) > int(list_two[0])
+    second_comparison = None if list_one[1] == list_two[1] else int(list_one[1]) > int(list_two[1])
+    third_comparison = None if list_one[2] == list_two[2] else int(list_one[2]) > int(list_two[2])
+    fourth_comparison = None if list_one[3] == list_two[3] else int(list_one[3]) > int(list_two[3])
+
     """here we are stocking differents comparison inside variables to make our if/else conditions more readable"""
 
     if first_comparison is None:
@@ -247,4 +210,73 @@ def is_within_mask(ip,mask,original_ip):
 
 
 
-print(is_within_mask("192.168.0.252","255.255.255.0","192.168.0.0"))
+# print(is_within_mask("192.168.0.252","255.255.255.0","192.168.0.0"))
+
+
+#here we create the function to give the next valid ip
+
+def next_ip(network,ip):
+    
+    """
+        this function will return a dictionnary with a status
+        if the status is True , it means we found a valid address 
+        otherwise it return a broadcast address or the last host
+
+    """
+
+    if not is_valid_ip(ip):
+        raise ValueError('the ip is not a valid ip')
+
+    status = False
+    next_ip='0.0.0.0'
+
+    network_config = network_caracteristics(network['network'],network['mask'])
+    last_host = network_config['last_host']
+    first_host = network_config['first_host']
+
+    if is_greater_ip(ip,last_host):
+        next_ip=last_host
+        return {'status':status,'next_ip':next_ip}
+    if ip==last_host:
+        next_ip = ip
+        return {'status':status,'next_ip':next_ip}
+    
+    list_of_ip = ip.split('.')
+    list_of_last_host = last_host.split('.')
+    last_host_parts = [list_of_last_host[:1],list_of_last_host[:2],list_of_last_host[:3],list_of_last_host[:4]]
+    ip_parts = [list_of_ip[:1],list_of_ip[:2],list_of_ip[:3],list_of_ip[:4]]
+    same_part=max([i for i in ip_parts if i in last_host_parts])
+    different_parts = list_of_ip[len(same_part):]
+
+    total = same_part +  different_parts
+    indice = 0
+    # print(total)
+    while indice <=3:
+        index= 3-indice
+        if not total[index] in same_part:
+
+            if(int(total[index])<=int(list_of_last_host[index])):
+                total[index]=str(int(total[index])+1)
+                indice+=1
+                break
+            else:
+                total[index]="0"
+                indice+=1
+    
+
+    next_ip = '.'.join(total) #we verify if the generated ip is in the range
+    status = is_within_mask(next_ip,network['mask'],network['network'])
+
+    return {'status':status,'next_ip':next_ip}
+
+#here we create the function to give the next valid mask
+
+def next_mask():
+    pass
+
+#here we create the function to split a network
+
+def split_network():
+    pass
+
+print(next_ip(test_plage,'192.168.255.'))
