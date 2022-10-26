@@ -4,9 +4,6 @@
 
 #a function to reverse a string
 
-from audioop import reverse
-from ipaddress import ip_address
-
 
 def reverse_string(sentence):
 
